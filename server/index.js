@@ -7,6 +7,12 @@ const jwt = require('jsonwebtoken');
 
 const app = express();
 
+// Fallbacks when .env is missing
+const JWT_SECRET = process.env.JWT_SECRET || 'jwt_secret';
+if (!process.env.JWT_SECRET) {
+  console.warn('[warn] JWT_SECRET not set.');
+}
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -16,7 +22,7 @@ const authenticateToken = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.sendStatus(401);
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) return res.sendStatus(403);
     req.user = user;
     next();
@@ -36,7 +42,7 @@ app.post('/api/login', (req, res) => {
     
     const token = jwt.sign(
       { id: user.id, username: user.username },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: '1h' }
     );
     res.json({ token });
